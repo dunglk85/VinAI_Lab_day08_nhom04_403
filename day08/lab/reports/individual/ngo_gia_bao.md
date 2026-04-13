@@ -1,33 +1,32 @@
 # Báo Cáo Cá Nhân — Lab Day 08: RAG Pipeline
 
 **Họ và tên:** Ngô Gia Bảo
-
-**Vai trò trong nhóm:** Tech Lead / Retrieval Owner
-
+**Vai trò trong nhóm:** Eval Owner
 **Ngày nộp:** 13/04/2026  
-
 **Độ dài yêu cầu:** 500–800 từ
 
 ---
 
 ## 1. Tôi đã làm gì trong lab này? (100-150 từ)
 
-Trong dự án lab này, tôi đóng vai trò là Tech Lead và Retrieval Owner, chịu trách nhiệm chính trong việc xây dựng và kết nối các thành phần của pipeline RAG. Cụ thể, tôi đã thực hiện:
-- **Sprint 1 & 2:** Xây dựng quy trình Indexing hoàn chỉnh trong `index.py`, bao gồm việc thiết kế logic chia nhỏ tài liệu (chunking) theo Section heading và Paragraph để giữ ngữ cảnh tự nhiên. Tôi cũng đã viết hàm `get_embedding()` sử dụng OpenAI API.
-- **Debugging:** Tôi đã trực tiếp xử lý các lỗi kỹ thuật quan trọng như lỗi mismatch dimension (3072 vs 1536) trong ChromaDB bằng cách thực hiện reset collection và tối ưu hóa việc nạp biến môi trường từ file `.env`.
-- **Sprint 3:** Triển khai cấu hình Hybrid Retrieval và Rerank trong `rag_answer.py` để so sánh với bản Baseline.
+Trong dự án lab này, tôi đảm nhận vai trò Eval Owner, chịu trách nhiệm chính trong việc đánh giá chất lượng của hệ thống RAG. Cụ thể, tôi đã thực hiện:
+- **Xây dựng bộ Test Set:** Tôi đã thiết kế 10 câu hỏi kiểm thử bao phủ nhiều trường hợp khác nhau (factoid, synthesis, open-ended) dựa trên tập tài liệu chính sách của công ty.
+- **Triển khai LLM-as-a-Judge:** Tôi đã thiết lập pipeline đánh giá tự động (scorecard) sử dụng LLM để chấm điểm các tiêu chí Faithfulness, Relevance, Context Recall và Completeness cho cả phiên bản Baseline và Hybrid Variant.
+- **Phân tích kết quả và Lỗi:** Thông qua scorecard, tôi nhận diện các điểm yếu của hệ thống (như việc trả lời sai mã lỗi hay thiếu thông tin) và phối hợp với Retrieval Owner để chẩn đoán nguyên nhân, sau đó ghi chú lại trong bảng so sánh kết quả cũng như hỗ trợ điều chỉnh các pipeline.
 
 ---
 
 ## 2. Điều tôi hiểu rõ hơn sau lab này (100-150 từ)
 
-Sau buổi làm lab, khái niệm mà tôi hiểu rõ nhất chính là **tầm quan trọng của Preprocessing (Tiền xử lý)** trong Indexing. Ban đầu, tôi cho rằng kết quả tìm kiếm sai là do thuật toán Retrieval chưa đủ mạnh (Dense vs Hybrid). Tuy nhiên, qua thực tế debug câu hỏi về "Approval Matrix", tôi nhận ra rằng nếu bước Preprocessing vô tình loại bỏ thông tin quan trọng (như các dòng chú thích alias ở đầu file) thì dù thuật toán tìm kiếm có tốt đến đâu cũng không thể trả về kết quả đúng. Ngoài ra, tôi cũng hiểu sâu hơn về **Evaluation Loop** — việc sử dụng LLM-as-Judge để chấm điểm tự động giúp chúng ta nhanh chóng nhận ra các lỗi hallucination hoặc lỗi thiếu thông tin (completeness) mà nếu kiểm tra thủ công sẽ mất rất nhiều thời gian.
+Điều tôi hiểu rõ nhất sau lab này chính là **tầm quan trọng của Evaluation Loop (Vòng lặp đánh giá tự động)** và cách định lượng chất lượng RAG. Ban đầu, tôi đánh giá khá cảm tính, cho rằng chỉ cần đọc câu trả lời thấy "có vẻ đúng" là được. Tuy nhiên, khi sử dụng LLM-as-Judge, tôi nhận thấy các góc nhìn chi tiết hơn—đặc biệt là sự khác biệt giữa "trả lời có đúng và dựa vào context không (Faithfulness)" và "trả lời có đầy đủ không (Completeness)". Tôi cũng hiểu sâu sắc hơn về tính ưu việt của tự động hóa: thay vì mất hàng giờ đọc từng câu mỗi khi thay đổi prompt hay thuật toán, việc có sẵn một scorecard chạy tự động cho phép team tối ưu (iterate) cực kỳ nhanh chóng và tự tin chứng minh được sự cải thiện.
 
 ---
 
 ## 3. Điều tôi ngạc nhiên hoặc gặp khó khăn (100-150 từ)
 
-Khó khăn lớn nhất mà tôi gặp phải là lỗi **401 Unauthorized** và **Dimension Mismatch**. Cụ thể, khi hệ thống đã có sẵn API key cũ trong môi trường (system environment variable), hàm `load_dotenv()` thông thường không ghi đè được dữ liệu từ file `.env`, dẫn đến việc gọi API liên tục thất bại. Ngoài ra, việc thay đổi giữa các model embedding của OpenAI (từ `large` sang `small`) yêu cầu phải xóa và khởi tạo lại vector store, nếu không ChromaDB sẽ báo lỗi không tương thích kích thước vector. Điều này dạy cho tôi bài học rằng khi xây dựng pipeline, việc quản lý trạng thái của database (reset/init) và quản lý chặt chẽ biến môi trường là những bước nền tảng vô cùng quan trọng trước khi nghĩ đến việc tối ưu hóa thuật toán.
+Khó khăn lớn nhất là **LLM-as-a-Judge đôi khi chấm điểm khá khắt khe và cần tinh chỉnh prompt (tiêu chí đánh giá)**. Trong những lần chạy đầu tiên, LLM Judge cho điểm Relevance thấp dù câu trả lời có liên quan, vì nó đòi hỏi câu trả lời phải bao trọn cả một số chi tiết phụ trong ngữ cảnh.
+
+Điều làm tôi cực kỳ ngạc nhiên là khi so sánh giữa Baseline (chỉ Dense) và Variant (Hybrid + Reranking), **điểm của phiên bản Variant lại thấp hơn ở tiêu chí Completeness (3.20/5) và Relevance (4.10/5)** so với Baseline sau khi đã fix indexing (Completeness: 4.00, Relevance: 4.60). Việc Reranking vô tình loại bỏ một số chunk có ý nghĩa bổ sung (nhưng điểm số sematic relevance thấp), khiến Generation bị thiếu hụt ý tưởng. Điều này cho thấy với tập văn bản nhỏ, Dense Retrieval thuần có thể hoạt động ổn định và đầy đủ hơn.
 
 ---
 
@@ -35,16 +34,16 @@ Khó khăn lớn nhất mà tôi gặp phải là lỗi **401 Unauthorized** và
 
 **Câu hỏi:** "Approval Matrix để cấp quyền hệ thống là tài liệu nào?" (q07)
 
-**Phân tích:**
-Trong lần thử nghiệm đầu tiên, hệ thống Baseline trả lời sai hoàn toàn vì bước Preprocessing đã coi dòng *"Ghi chú: Tài liệu này trước đây có tên Approval Matrix for System Access"* là metadata rác và loại bỏ nó khỏi nội dung index. Kết quả là điểm Faithfulness chỉ đạt 2/5 và Completeness đạt rất thấp.
+**Phân tích từ góc độ Evaluation:**
+Trước khi nhóm fix vấn đề tiền xử lý, hệ thống đạt điểm Faithfulness rất thấp (2/5) vì không tìm thấy tên "Approval Matrix", mô hình buộc phải bịa câu trả lời hoặc abstain nhầm do đoạn chú thích này từng bị coi là rác. 
 
-Sau khi tôi điều chỉnh lại logic trong hàm `preprocess_document` để giữ lại các dòng chú thích (notes) quan trọng, điểm Baseline đã cải thiện đáng kể (Faithfulness tăng lên 3/5). Tuy nhiên, khi chuyển sang **Variant (Hybrid + Rerank)**, tôi ngạc nhiên thấy kết quả không tốt hơn đáng kể so với bản Baseline đã fix indexing. Điều này cho thấy với tập dữ liệu nhỏ và cấu trúc tài liệu rõ ràng, Dense Retrieval đơn thuần đã làm rất tốt. Việc thêm Rerank thậm chí còn gây rủi ro loại bỏ nhầm các chunk chứa alias nếu điểm số reranking không đủ cao. Điều này chứng minh rằng việc tối ưu hóa "Data Quality" ở bước Indexing thường mang lại hiệu quả cao hơn và chi phí thấp hơn so với việc cố gắng làm phức tạp hóa bước Retrieval.
+Nhưng điều thú vị là trong đợt test Variant (Hybrid + Reranking), một lần nữa câu này lại bộc lộ hạn chế. Dù Hybrid Retrieval có thể bắt được keyword, nhưng bước LLM Reranking (nếu thiết lập prompt ranking hoặc cut-off chặt) lại vô tình đẩy chunk chứa chú thích alias đó xuống dưới cùng và rơi ra ngoài `top_k=3` được đưa vào context cuối, khiến câu trả lời bị hụt thông tin. Qua phân tích log và điểm số, tôi kiến nghị Retrieval Owner rằng **"không nên lạm dụng Rerank nếu nó gây rủi ro loại bỏ dữ liệu hiếm"**. Cuối cùng, bản Baseline sau fix parsing lại là bản trả lời câu này tốt và lấy điểm scorecard ổn định nhất.
 
 ---
 
 ## 5. Nếu có thêm thời gian, tôi sẽ làm gì? (50-100 từ)
 
-Nếu có thêm thời gian, tôi sẽ tập trung vào việc **Prompt Engineering** cho bước Generation và điều chỉnh **Top-k select**. Hiện tại điểm Completeness của một số câu như `q01` vẫn chưa đạt 5/5 do model trả lời quá ngắn gọn. Tôi muốn thử tăng `top_k_select` từ 3 lên 5 và điều chỉnh prompt để ép model phải liệt kê đầy đủ các điều kiện ngoại lệ khi trả lời chính sách hoàn tiền, thay vì chỉ tóm tắt ý chính.
+Nếu có thêm thời gian, tôi sẽ mở rộng Test Set từ 10 câu lên 30-50 câu để đảm bảo các điểm số metric mang tính đại diện thống kê cao hơn, chia làm các nhóm khó dễ rõ ràng (ví dụ: cần tổng hợp từ nhiều tài liệu/nhiều section). Ngoài ra, tôi cũng muốn nghiên cứu sử dụng các evaluation framework chuẩn công nghiệp như **Ragas** hay **TruLens** để đo lường tự động độ chính xác của Retrived Context chuyên sâu hơn thay vì tự code bằng tay kịch bản chấm điểm.
 
 ---
 
