@@ -2,9 +2,9 @@
 
 **Tên nhóm:** [Tên Nhóm]
 **Thành viên:** 
-1. Ngô Gia Bảo (Tech Lead / Retrieval Owner)
-2. [Tên thành viên 2] (Eval Owner)
-3. [Tên thành viên 3] (Documentation Owner)
+1. Ngô Gia Bảo (Eval Owner)
+2. Lê Kim Dũng (Tech Lead, Retrieval Owner)
+3. Nguyễn Dương Linh (Documentation Owner)
 
 ---
 
