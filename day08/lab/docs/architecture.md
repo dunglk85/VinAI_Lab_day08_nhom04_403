@@ -18,7 +18,7 @@
 ```
 
 **Mô tả ngắn gọn:**
-> TODO: Mô tả hệ thống trong 2-3 câu. Nhóm xây gì? Cho ai dùng? Giải quyết vấn đề gì?
+Hệ thống là một trợ lý ảo nội bộ dành cho khối CS (Customer Service) và IT Helpdesk, giúp trả lời các câu hỏi về chính sách và quy trình công ty dựa trên nguồn dữ liệu tin cậy. Hệ thống giải quyết vấn đề truy xuất thông tin nhanh chóng và chính xác bằng cách kết hợp tìm kiếm ngữ nghĩa và trích dẫn bằng chứng cụ thể.
 
 ---
 
@@ -27,22 +27,22 @@
 ### Tài liệu được index
 | File | Nguồn | Department | Số chunk |
 |------|-------|-----------|---------|
-| `policy_refund_v4.txt` | policy/refund-v4.pdf | CS | TODO |
-| `sla_p1_2026.txt` | support/sla-p1-2026.pdf | IT | TODO |
-| `access_control_sop.txt` | it/access-control-sop.md | IT Security | TODO |
-| `it_helpdesk_faq.txt` | support/helpdesk-faq.md | IT | TODO |
-| `hr_leave_policy.txt` | hr/leave-policy-2026.pdf | HR | TODO |
+| `policy_refund_v4.txt` | policy/refund-v4.pdf | CS | 6 |
+| `sla_p1_2026.txt` | support/sla-p1-2026.pdf | IT | 5 |
+| `access_control_sop.txt` | it/access-control-sop.md | IT Security | 8 |
+| `it_helpdesk_faq.txt` | support/helpdesk-faq.md | IT | 7 |
+| `hr_leave_policy.txt` | hr/leave-policy-2026.pdf | HR | 8 |
 
 ### Quyết định chunking
 | Tham số | Giá trị | Lý do |
 |---------|---------|-------|
-| Chunk size | TODO tokens | TODO |
-| Overlap | TODO tokens | TODO |
-| Chunking strategy | Heading-based / paragraph-based | TODO |
+| Chunk size | 400 tokens | Cân bằng giữa việc giữ đủ ngữ cảnh và tối ưu chi phí token. |
+| Overlap | 80 tokens | Tránh hiện tượng mất thông tin ở ranh giới giữa các chunk. |
+| Chunking strategy | Heading-based + Paragraph-based | Ưu tiên cắt theo heading để giữ logic tài liệu, sau đó cắt theo paragraph nếu section quá dài. |
 | Metadata fields | source, section, effective_date, department, access | Phục vụ filter, freshness, citation |
 
 ### Embedding model
-- **Model**: TODO (OpenAI text-embedding-3-small / paraphrase-multilingual-MiniLM-L12-v2)
+- **Model**: OpenAI text-embedding-3-small (1536 dims)
 - **Vector store**: ChromaDB (PersistentClient)
 - **Similarity metric**: Cosine
 
@@ -61,15 +61,14 @@
 ### Variant (Sprint 3)
 | Tham số | Giá trị | Thay đổi so với baseline |
 |---------|---------|------------------------|
-| Strategy | TODO (hybrid / dense) | TODO |
-| Top-k search | TODO | TODO |
-| Top-k select | TODO | TODO |
-| Rerank | TODO (cross-encoder / MMR) | TODO |
-| Query transform | TODO (expansion / HyDE / decomposition) | TODO |
+| Strategy | Hybrid (Dense + BM25) | Kết hợp tìm kiếm keyword để bắt alias/mã lỗi. |
+| Top-k search | 10 | Giữ nguyên độ rộng tìm kiếm. |
+| Top-k select | 3 | Lọc ra 3 kết quả tốt nhất sau khi merge. |
+| Rerank | LLM Reranker | Sử dụng GPT-4o-mini để chấm điểm lại mức độ liên quan. |
+| Query transform | None | Tạm thời giữ nguyên query gốc. |
 
 **Lý do chọn variant này:**
-> TODO: Giải thích tại sao chọn biến này để tune.
-> Ví dụ: "Chọn hybrid vì corpus có cả câu tự nhiên (policy) lẫn mã lỗi và tên chuyên ngành (SLA ticket P1, ERR-403)."
+Cấu hình Hybrid giúp xử lý tốt các câu hỏi chứa keyword đặc thù (như mã lỗi ERR-403) hoặc các tên tài liệu cũ (Approval Matrix). Reranking giúp loại bỏ các "noise" từ dense retrieval khi gặp tài liệu có nội dung tương đồng nhưng không đúng mục đích.
 
 ---
 
@@ -96,7 +95,7 @@ Answer:
 ### LLM Configuration
 | Tham số | Giá trị |
 |---------|---------|
-| Model | TODO (gpt-4o-mini / gemini-1.5-flash) |
+| Model | gpt-4o-mini |
 | Temperature | 0 (để output ổn định cho eval) |
 | Max tokens | 512 |
 
