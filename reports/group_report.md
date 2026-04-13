@@ -1,7 +1,7 @@
 # Báo Cáo Nhóm — Lab Day 08: RAG Pipeline
 
 **Nhóm:** 04
-**Thành viên:** Lê Kim Dung (và các thành viên khác)
+**Thành viên:** Lê Kim Dung, Nguyen Duong Ninh, Ngo Gia Bao
 
 ## 1. Tóm tắt hệ thống RAG
 
