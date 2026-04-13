@@ -1,7 +1,7 @@
 # Báo Cáo Cá Nhân — Lab Day 08: RAG Pipeline
 
 **Họ và tên:** Nguyễn Duong Ninh
-**Vai trò trong nhóm:** Tech Lead / Document Owner
+**Vai trò trong nhóm:** Document Owner
 **Ngày nộp:** 13/04/2026
 **Độ dài yêu cầu:** 500–800 từ
 
